@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Italy Pizza | Premium Taste</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,600;1,700&display=swap" rel="stylesheet">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans:['Inter', 'sans-serif'],
+                        script: ['Great Vibes', 'cursive'], 
+                        quote: ['Playfair Display', 'serif']
+                    },
+                    colors: {
+                        darkBg: '#111827',
+                        pizzaRed: { DEFAULT: '#dc2626', hover: '#b91c1c' },
+                        pizzaYellow: { DEFAULT: '#facc15', hover: '#eab308' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+
+    <style>
+        body {
+            background-color: #f9fafb;
+            color: #111827;
+            overflow-x: hidden;
+        }
+
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(220, 38, 38, 0.4); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #dc2626; }
+
+        /* Ambient Background Blurs */
+        .ambient-blur {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: -1;
+            opacity: 0.5;
+            animation: drift 20s infinite alternate ease-in-out;
+            pointer-events: none;
+        }
+        @keyframes drift {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5vw, 5vh) scale(1.1); }
+            100% { transform: translate(-5vw, 10vh) scale(0.9); }
+        }
+
+        /* Glassmorphism */
+        .mac-glass {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
+        }
+        
+        .dark-glass {
+            background: rgba(17, 24, 39, 0.85);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        /* 3D VIP Card */
+        .perspective-container { perspective: 1500px; transform-style: preserve-3d; }
+        .float-wrapper { transform-style: preserve-3d; }
+        .card-3d {
+            transform-style: preserve-3d;
+            cursor: grab;
+            position: relative;
+            will-change: transform;
+            box-shadow: 0 30px 60px -15px rgba(220, 38, 38, 0.4);
+            border-radius: 1.2rem;
+        }
+        .card-3d:active { cursor: grabbing; }
+        .card-face {
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 1.2rem;
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #000000 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .card-back { transform: rotateY(180deg); }
+
+        .glare {
+            position: absolute;
+            inset: -100%;
+            background: linear-gradient(115deg, transparent 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0.05) 60%, transparent 100%);
+            transform: translateX(0%);
+            will-change: transform;
+            pointer-events: none;
+            mix-blend-mode: overlay;
+        }
+
+        .embossed-text {
+            color: #facc15;
+            text-shadow: -1px -1px 1px rgba(255,255,255,0.2), 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
+        .hover-lift { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .hover-lift:hover { 
+            transform: translateY(-4px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-pizzaRed selection:text-white">
+
+    <!-- Ambient Background Elements -->
+    <div class="ambient-blur w-[40vw] h-[40vw] top-[-10vh] left-[-10vw] bg-pizzaYellow/20"></div>
+    <div class="ambient-blur w-[50vw] h-[50vw] bottom-[-20vh] right-[-10vw] bg-pizzaRed/10" style="animation-delay: -5s;"></div>
+
+    <!-- Header Navigation -->
+    <header class="fixed top-0 w-full z-50 nav-glass transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-20">
+                <div class="flex flex-col cursor-pointer group">
+                    <span class="font-script text-4xl text-pizzaRed drop-shadow-sm group-hover:scale-105 transition-transform origin-left">Italy Pizza</span>
+                    <span class="text-[0.6rem] font-bold tracking-widest uppercase text-gray-500">Premium Taste</span>
+                </div>
+                <nav class="hidden lg:flex space-x-8 text-sm font-semibold tracking-wide uppercase">
+                    <a href="#pizzas" class="hover:text-pizzaRed transition">Pizzas</a>
+                    <a href="#b1g1-deals" class="hover:text-pizzaRed transition">B1G1 Deals</a>
+                    <a href="#special-deals" class="hover:text-pizzaRed transition">Special Deals</a>
+                    <a href="#fast-food" class="hover:text-pizzaRed transition">Burgers & Sides</a>
+                </nav>
+                <div class="flex flex-col items-end">
+                    <a href="tel:0553734545" class="bg-pizzaRed text-white px-5 py-2 rounded-full text-sm font-bold hover:bg-pizzaRed-hover transition shadow-lg shadow-pizzaRed/30 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                        Order Now
+                    </a>
+                    <span class="text-xs text-gray-500 mt-1 font-medium hidden sm:block">055-3734545 | 0303-0608040</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section with 3D VIP Card -->
+    <section class="relative min-h-screen flex flex-col items-center justify-center pt-28 pb-12 perspective-container z-10">
+        
+        <div class="text-center mb-12 px-4 z-20">
+            <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-pizzaRed/10 border border-pizzaRed/20 text-pizzaRed text-xs font-bold tracking-widest uppercase mb-6 gsap-hero" style="opacity: 0; transform: translateY(30px);">
+                <span class="w-2 h-2 rounded-full bg-pizzaRed animate-pulse"></span> Free Home Delivery in Model Town
+            </div>
+            <h1 class="gsap-hero text-5xl md:text-7xl font-bold tracking-tight text-darkBg mb-6" style="opacity: 0; transform: translateY(30px);">
+                Taste the <br><span class="text-pizzaRed font-script text-7xl md:text-9xl font-normal leading-none block mt-2">Authentic Slice</span>
+            </h1>
+            <p class="gsap-hero text-lg md:text-xl text-gray-600 font-medium max-w-2xl mx-auto mb-2" style="opacity: 0; transform: translateY(30px);">
+                Opening: 12:00 PM | Closing: 12:30 AM
+            </p>
+            <p class="gsap-hero text-sm text-gray-500 font-semibold uppercase tracking-wider" style="opacity: 0; transform: translateY(30px);">
+                Minimum Order Rs: 1000/- (45 Minutes)
+            </p>
+        </div>
+
+        <div class="float-wrapper w-[85vw] max-w-[420px] aspect-[1.58/1] relative mx-auto z-30 gsap-hero" style="opacity: 0; transform: translateY(50px);">
+            <div id="vip-card" class="card-3d w-full h-full">
+                <!-- Front Face -->
+                <div class="card-face card-front p-6 flex flex-col justify-between border-t-2 border-t-pizzaRed/50">
+                    <div class="glare" id="glare-front"></div>
+                    
+                    <div class="flex justify-between items-start w-full z-10 relative">
+                        <!-- Chip -->
+                        <div class="w-10 h-8 rounded bg-gradient-to-br from-yellow-200 to-yellow-500 border border-yellow-600/50 shadow-inner relative overflow-hidden flex flex-col justify-evenly px-1">
+                            <div class="w-full h-[1px] bg-yellow-700/40"></div>
+                            <div class="w-full h-[1px] bg-yellow-700/40"></div>
+                            <div class="w-full h-[1px] bg-yellow-700/40"></div>
+                            <div class="absolute inset-0 flex justify-center items-center">
+                                <div class="w-[1px] h-full bg-yellow-700/40"></div>
+                                <div class="w-[60%] h-[60%] border border-yellow-700/40 rounded-full absolute"></div>
+                            </div>
+                        </div>
+                        <span class="text-white/80 text-xs font-bold tracking-widest uppercase">Member Card</span>
+                    </div>
+
+                    <div class="z-10 w-full text-center mt-auto mb-4 relative">
+                        <h2 class="font-script text-5xl md:text-6xl text-white drop-shadow-md">Italy Pizza</h2>
+                        <h3 class="text-[0.65rem] md:text-xs tracking-[0.3em] text-pizzaYellow font-bold mt-1 uppercase">VIP EXCLUSIVE</h3>
+                    </div>
+                </div>
+
+                <!-- Back Face -->
+                <div class="card-face card-back p-0 flex flex-col relative border-b-2 border-b-pizzaYellow/50">
+                    <div class="glare" id="glare-back"></div>
+                    
+                    <div class="w-full h-10 bg-black mt-6 shadow-md z-10 relative"></div>
+
+                    <div class="z-20 text-center px-6 relative flex-1 flex flex-col justify-center">
+                        <p class="font-sans text-xl md:text-2xl text-white font-bold uppercase tracking-wider mb-2 text-shadow-sm">
+                            Buy 1 Get 1 <span class="text-pizzaYellow">Free</span>
+                        </p>
+                        <p class="text-[0.6rem] md:text-xs font-medium uppercase tracking-widest text-gray-400">
+                            Only for Members. Terms & Conditions apply.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-10 text-center text-xs font-bold text-gray-400 uppercase tracking-widest animate-pulse z-20 select-none">
+            <span class="mr-2">←</span> Drag to reveal deals <span class="ml-2">→</span>
+        </div>
+    </section>
+
+    <!-- PIZZAS MENU SECTION -->
+    <section id="pizzas" class="py-20 relative z-10 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-16 text-center">
+                <h2 class="text-4xl md:text-5xl font-bold text-darkBg mb-3">Our Pizzas</h2>
+                <p class="text-gray-500 font-medium">Buy 1 Get 1 Free Only for Members</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                
+                <!-- Classic Flavours -->
+                <div class="mac-glass rounded-3xl p-6 md:p-8 menu-item">
+                    <div class="border-b-2 border-darkBg pb-4 mb-6 flex justify-between items-end">
+                        <h3 class="text-2xl font-bold uppercase tracking-wide">Classic Flavours</h3>
+                        <div class="text-[0.65rem] md:text-xs font-bold text-gray-500 flex gap-2 sm:gap-4 uppercase">
+                            <span class="w-12 text-center">Reg</span>
+                            <span class="w-12 text-center">Med</span>
+                            <span class="w-12 text-center">Lrg</span>
+                            <span class="w-12 text-center">Fam</span>
+                        </div>
+                    </div>
+                    <ul class="space-y-4">
+                        <!-- Items -->
+                        <li class="flex justify-between items-center group">
+                            <div class="flex-1 pr-4">
+                                <h4 class="font-bold text-lg group-hover:text-pizzaRed transition">Chicken Tikka B.B.Q</h4>
+                                <p class="text-xs text-gray-500 line-clamp-1">Cheese, Marinated B.B.Q Chicken, Tasty Tomato Sauce, Peppers, Tomato</p>
+                            </div>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">800</span><span class="w-12 text-center">1400</span><span class="w-12 text-center">2100</span><span class="w-12 text-center">2600</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <div class="flex-1 pr-4">
+                                <h4 class="font-bold text-lg group-hover:text-pizzaRed transition">Chicken Fajita</h4>
+                            </div>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">800</span><span class="w-12 text-center">1400</span><span class="w-12 text-center">2100</span><span class="w-12 text-center">2600</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <div class="flex-1 pr-4">
+                                <h4 class="font-bold text-lg group-hover:text-pizzaRed transition">Tandoori Pizza</h4>
+                            </div>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">800</span><span class="w-12 text-center">1400</span><span class="w-12 text-center">2100</span><span class="w-12 text-center">2600</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <div class="flex-1 pr-4">
+                                <h4 class="font-bold text-lg group-hover:text-pizzaRed transition">Hot-N-Spicy</h4>
+                            </div>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">800</span><span class="w-12 text-center">1400</span><span class="w-12 text-center">2100</span><span class="w-12 text-center">2600</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <div class="flex-1 pr-4">
+                                <h4 class="font-bold text-lg group-hover:text-pizzaRed transition">Vegetarian Pizza</h4>
+                            </div>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">800</span><span class="w-12 text-center">1400</span><span class="w-12 text-center">2100</span><span class="w-12 text-center">2600</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <div class="flex-1 pr-4">
+                                <h4 class="font-bold text-lg group-hover:text-pizzaRed transition">Cheese Gold Pizza</h4>
+                            </div>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">800</span><span class="w-12 text-center">1400</span><span class="w-12 text-center">2100</span><span class="w-12 text-center">2600</span>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Special Flavours -->
+                <div class="mac-glass rounded-3xl p-6 md:p-8 menu-item bg-gradient-to-br from-pizzaYellow/10 to-transparent border-pizzaYellow/30">
+                    <div class="border-b-2 border-darkBg pb-4 mb-6 flex justify-between items-end">
+                        <h3 class="text-2xl font-bold text-pizzaRed uppercase tracking-wide">New Special Flavour</h3>
+                        <div class="text-[0.65rem] md:text-xs font-bold text-gray-500 flex gap-2 sm:gap-4 uppercase">
+                            <span class="w-12 text-center">Reg</span>
+                            <span class="w-12 text-center">Med</span>
+                            <span class="w-12 text-center">Lrg</span>
+                            <span class="w-12 text-center">Fam</span>
+                        </div>
+                    </div>
+                    <ul class="space-y-3">
+                        <!-- Map specials -->
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Double Cheese Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Malai Booti Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Chicken Lovers Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Italy Special Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Chicken Achar Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Chicken Supreme Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Kabab Crust Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Mashroom Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Creamy Special Pizza</h4>
+                            <div class="text-sm font-semibold flex gap-2 sm:gap-4 text-darkBg">
+                                <span class="w-12 text-center">1200</span><span class="w-12 text-center">1800</span><span class="w-12 text-center">2600</span><span class="w-12 text-center">3200</span>
+                            </div>
+                        </li>
+                        <li class="flex justify-between items-center group pt-2 border-t border-gray-200 border-dashed">
+                            <h4 class="font-bold text-[1.05rem] group-hover:text-pizzaRed transition">Cheese Stick (Regular)</h4>
+                            <div class="text-sm font-bold text-pizzaRed">800/-</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Extra Toppings -->
+            <div class="mt-8 bg-darkBg text-white rounded-2xl p-6 menu-item flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <h4 class="text-pizzaYellow font-bold uppercase tracking-wider mb-1">Extra Topping / Choose Crust</h4>
+                    <p class="text-xs text-gray-400">1. Ultimate Deep Dish | 2. Crunchy Thin Crust | 3. Classic Hand Topping</p>
+                </div>
+                <div class="flex gap-6 text-sm font-bold uppercase">
+                    <div class="text-center"><span class="block text-gray-400 text-xs mb-1">S</span>100/-</div>
+                    <div class="text-center"><span class="block text-gray-400 text-xs mb-1">M</span>200/-</div>
+                    <div class="text-center"><span class="block text-gray-400 text-xs mb-1">L</span>300/-</div>
+                    <div class="text-center"><span class="block text-gray-400 text-xs mb-1">F</span>400/-</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- BUY 1 GET 1 DEALS SECTION -->
+    <section id="b1g1-deals" class="py-20 bg-gray-100 relative z-10 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="mb-12 text-center">
+                <span class="bg-yellow-300 text-yellow-900 px-4 py-1 rounded-full text-xs font-bold uppercase tracking-widest mb-4 inline-block">Member Exclusive</span>
+                <h2 class="text-4xl md:text-5xl font-bold text-darkBg mb-3 uppercase tracking-tight">Buy 1 Deal Get 1 Deal Free</h2>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                
+                <!-- B1G1 Deal Card Template -->
+                <script>
+                    const b1g1Deals =[
+                        { id: 1, items: "1 Zinger Burger, 1 Regular Fries, 1 Reg Drink", price: 1000 },
+                        { id: 2, items: "1 Chicken Burger, 1 Regular Fries, 1 Reg Drink", price: 900 },
+                        { id: 3, items: "1 Zinger Burger, 1 Chicken Pc, 1 Regular Fries, 1 Reg Drink", price: 1300 },
+                        { id: 4, items: "2 Zinger Burger, 2 Chicken Pc, 2 Regular Fries, 2 Reg Drink", price: 2500 },
+                        { id: 5, items: "2 Chicken Burger, 2 Regular Fries, 2 Reg Drink", price: 1500 },
+                        { id: 6, items: "1 Cheese Stick, 1 Regular Drink", price: 1200 },
+                        { id: 7, items: "1 Zinger Burger, 1 Zinger Pratha, 2 Regular Drink", price: 1600 },
+                        { id: 8, items: "5 Piece Hot Wings, 1 Regular Drink", price: 1200 },
+                        { id: 9, items: "1 Small Pizza, 1 Regular Drink", price: 1300 },
+                        { id: 10, items: "1 Medium Pizza, 1 Litter Drink, 1 Zinger Pratha, 1 Small Fries", price: 2400 },
+                        { id: 11, items: "1 Large Pizza, 1 Litter Drink", price: 2450 },
+                        { id: 12, items: "1 Family Pizza, 1.5 Litter Drink", price: 3050 },
+                        { id: 13, items: "1 Small Pizza, 1 Zinger Burger, 1 Regular Drink, 2 Piece Hot Wings, 2 Nuggets", price: 2000 }
+                    ];
+
+                    b1g1Deals.forEach(deal => {
+                        let html = `
+                        <div class="bg-white border border-gray-200 rounded-xl p-5 hover-lift relative overflow-hidden group menu-deal">
+                            <div class="absolute top-0 right-0 bg-pizzaRed text-white px-3 py-1 rounded-bl-lg text-xs font-bold">Deal ${deal.id}</div>
+                            <ul class="text-sm text-gray-600 font-medium space-y-1 mt-4 mb-6 pr-6 min-h-[60px]">
+                                ${deal.items.split(', ').map(item => `<li>• ${item}</li>`).join('')}
+                            </ul>
+                            <div class="text-xl font-black text-darkBg border-t border-gray-100 pt-3">${deal.price}/-</div>
+                        </div>`;
+                        document.write(html);
+                    });
+                </script>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- SPECIAL & TRIPLE DEALS SECTION -->
+    <section id="special-deals" class="py-20 relative z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                
+                <!-- Special Deals (No Buy 1 Get 1) -->
+                <div>
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-darkBg mb-2 uppercase">Special Deals</h2>
+                        <p class="text-xs font-bold text-pizzaRed uppercase tracking-wider">No Buy One Get One</p>
+                    </div>
+                    <div class="space-y-4">
+                        <script>
+                            const specialDeals =[
+                                { id: 11, items: "1 Small Pizza, 1 Zinger Burger, 1 Regular Drink", price: 900 },
+                                { id: 12, items: "1 Medium Pizza, 1 Zinger Burger, 1 Small Fries, 1 Liter Drink", price: 1550 },
+                                { id: 13, items: "1 Medium Pizza, 1 Zinger Burger, 5 Piece Hot Shot, 1 Liter Drink, 1 Reg Fries", price: 1650 },
+                                { id: 14, items: "1 Large Pizza, 2 Chicken Burger, 2 Piece Chicken, 1 Large Fries, 1 1.5 Drink", price: 2300 },
+                                { id: 15, items: "1 Large Pizza, 2 Zinger Burger, 2 Pratha Roll, 1 Large Fries, 1 1.5 Drink", price: 2500 }
+                            ];
+                            specialDeals.forEach(deal => {
+                                document.write(`
+                                <div class="bg-white mac-glass rounded-2xl p-5 flex justify-between items-center shadow-sm hover:shadow-md transition-shadow border border-gray-200 menu-deal">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-pizzaRed text-lg mb-1">Deal ${deal.id}</h4>
+                                        <p class="text-sm text-gray-600 leading-snug pr-4">${deal.items}</p>
+                                    </div>
+                                    <div class="text-2xl font-black text-darkBg pl-4 border-l border-gray-200">${deal.price}/-</div>
+                                </div>`);
+                            });
+                        </script>
+                    </div>
+                </div>
+
+                <!-- Triple Pizza & Birthday -->
+                <div>
+                    <div class="mb-8">
+                        <h2 class="text-3xl font-bold text-darkBg mb-2 uppercase">Triple Pizza Offer</h2>
+                        <p class="text-xs font-bold text-gray-500 uppercase tracking-wider">in deals par koi discount nahi hai</p>
+                    </div>
+                    <div class="space-y-4">
+                        <script>
+                            const tripleDeals =[
+                                { id: 1, size: 'S 8"', items: "1 Chicken Tikka, 1 Chicken Fajita, 1 Tanduri (Small), 1 Chicken Burger, 1 Ltr Drink", price: 1600 },
+                                { id: 2, size: 'M 11"', items: "1 Chicken Tikka, 1 Chicken Fajita, 1 Tanduri (Medium), 1 Ltr Drink", price: 2300 },
+                                { id: 3, size: 'L 14"', items: "1 Chicken Tikka, 1 Chicken Fajita, 1 Tanduri (Large), 1 Ltr Drink", price: 3200 },
+                                { id: 4, size: 'F 18"', items: "1 Chicken Tikka, 1 Chicken Fajita, 1 Tanduri (Family), 1.5 Ltr Drink", price: 4200 }
+                            ];
+                            tripleDeals.forEach(deal => {
+                                document.write(`
+                                <div class="bg-darkBg text-white rounded-2xl p-5 flex justify-between items-center shadow-md hover:-translate-y-1 transition-transform menu-deal">
+                                    <div class="flex-1">
+                                        <h4 class="font-bold text-pizzaYellow text-lg mb-1">Super Deal ${deal.id} <span class="text-xs text-gray-400 font-normal ml-2">${deal.size}</span></h4>
+                                        <p class="text-sm text-gray-300 leading-snug pr-4">${deal.items}</p>
+                                    </div>
+                                    <div class="text-2xl font-black text-white pl-4 border-l border-gray-700">${deal.price}/-</div>
+                                </div>`);
+                            });
+                        </script>
+                    </div>
+
+                    <!-- Birthday Deal -->
+                    <div class="mt-6 bg-gradient-to-r from-pizzaRed to-red-800 text-white rounded-2xl p-6 shadow-xl relative overflow-hidden menu-deal">
+                        <div class="absolute -right-4 -bottom-4 text-white/10 font-script text-8xl">Party</div>
+                        <h3 class="text-2xl font-bold mb-3 uppercase tracking-wide relative z-10">Birthday Deal</h3>
+                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-end relative z-10">
+                            <ul class="text-sm font-medium space-y-1 mb-4 sm:mb-0">
+                                <li>• Buy 3 Large Pizza Get 3 Large Pizza Free</li>
+                                <li>• 2 Pound Cake Free</li>
+                                <li>• 3 (1.5 Ltr) Drink Free</li>
+                                <li>• Dining Hall Charges Free</li>
+                            </ul>
+                            <div class="text-4xl font-black text-pizzaYellow drop-shadow-md">Rs: 8700/-</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- BURGERS, WRAPS & FRIED CHICKEN SECTION -->
+    <section id="fast-food" class="py-20 bg-gray-100 relative z-10 border-t border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                
+                <!-- Burgers & Wraps -->
+                <div class="md:col-span-2 bg-white rounded-3xl p-8 border border-gray-200 shadow-sm menu-deal">
+                    <h3 class="text-2xl font-bold uppercase mb-2">Burger & Wrap</h3>
+                    <p class="text-xs font-bold text-pizzaRed uppercase tracking-wider mb-6">Buy 1 Get 1 Free Only for Members</p>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-4">
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Chicken Burger</span><span class="font-bold">600/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Zinger Pratha</span><span class="font-bold">700/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Chicken Cheese Burger</span><span class="font-bold">700/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Chicken Pratha</span><span class="font-bold">600/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Zinger Burger</span><span class="font-bold">700/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Chicken Cheese Pratha</span><span class="font-bold">700/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Zinger Cheese Burger</span><span class="font-bold">800/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Chicken Shawarma</span><span class="font-bold">400/-</span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700"></span><span class="font-bold"></span></div>
+                        <div class="flex justify-between border-b border-gray-100 pb-2"><span class="font-semibold text-gray-700">Chicken Cheese Shawarma</span><span class="font-bold">500/-</span></div>
+                    </div>
+                </div>
+
+                <!-- Fried Chicken & Sides -->
+                <div class="bg-darkBg text-white rounded-3xl p-8 shadow-xl menu-deal">
+                    <h3 class="text-2xl font-bold uppercase mb-6 text-pizzaYellow">Side Order</h3>
+                    
+                    <div class="space-y-4 mb-8">
+                        <div class="flex justify-between items-center"><span class="font-medium text-gray-300">Full Fried <span class="text-xs text-gray-500">(8pc)</span></span><span class="font-bold">1600/-</span></div>
+                        <div class="flex justify-between items-center"><span class="font-medium text-gray-300">Half Fried <span class="text-xs text-gray-500">(4pc)</span></span><span class="font-bold">800/-</span></div>
+                        <div class="flex justify-between items-center"><span class="font-medium text-gray-300">Fried Chicken <span class="text-xs text-gray-500">(2pc)</span></span><span class="font-bold">400/-</span></div>
+                        <div class="flex justify-between items-center"><span class="font-medium text-gray-300">Hot Wings <span class="text-xs text-gray-500">(10pc)</span></span><span class="font-bold">550/-</span></div>
+                        <div class="flex justify-between items-center"><span class="font-medium text-gray-300">Hot Shots <span class="text-xs text-gray-500">(10pc)</span></span><span class="font-bold">550/-</span></div>
+                        <div class="flex justify-between items-center"><span class="font-medium text-gray-300">Nuggets <span class="text-xs text-gray-500">(10pc)</span></span><span class="font-bold">550/-</span></div>
+                    </div>
+
+                    <h4 class="text-lg font-bold uppercase mb-4 text-pizzaYellow border-t border-gray-700 pt-4">French Fries</h4>
+                    <div class="flex justify-between bg-gray-800 rounded-lg p-3">
+                        <div class="text-center w-1/2 border-r border-gray-600"><span class="block text-xs text-gray-400 uppercase">Medium</span><span class="font-bold">200/-</span></div>
+                        <div class="text-center w-1/2"><span class="block text-xs text-gray-400 uppercase">Large</span><span class="font-bold">300/-</span></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Call to Action / Delivery Banner -->
+    <section class="py-24 relative overflow-hidden z-10 bg-pizzaRed">
+        <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#000 2px, transparent 2px); background-size: 30px 30px;"></div>
+        
+        <div class="max-w-4xl mx-auto px-4 text-center relative z-10">
+            <h2 class="text-5xl md:text-6xl font-black tracking-tight text-white mb-6 uppercase">Free Home Delivery</h2>
+            <p class="text-xl text-white/80 font-medium mb-10">In Model Town (Out of Range Rs: 100/-)<br><span class="text-sm font-normal">Minimum Order 1000/- | 45 Mins</span></p>
+            
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-6">
+                <a href="tel:0553734545" class="inline-flex items-center gap-4 bg-white text-darkBg px-8 py-4 rounded-full transition-transform transform hover:scale-105 shadow-xl">
+                    <svg class="w-8 h-8 text-pizzaRed" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path></svg>
+                    <div class="flex flex-col items-start text-left">
+                        <span class="text-xs uppercase tracking-widest text-gray-500 font-bold mb-0.5">Call Landline</span>
+                        <span class="text-xl font-black tracking-wider">055-3734545</span>
+                    </div>
+                </a>
+                
+                <a href="tel:03030608040" class="inline-flex items-center gap-4 bg-darkBg text-white px-8 py-4 rounded-full transition-transform transform hover:scale-105 shadow-xl border border-gray-700">
+                    <svg class="w-8 h-8 text-pizzaYellow" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                    <div class="flex flex-col items-start text-left">
+                        <span class="text-xs uppercase tracking-widest text-gray-400 font-bold mb-0.5">Call Mobile</span>
+                        <span class="text-xl font-black tracking-wider">0303-0608040</span>
+                    </div>
+                </a>
+            </div>
+            
+            <p class="text-white/60 mt-6 text-sm">Alternative Mobile: 0307-7373083</p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-darkBg py-12 text-center text-sm font-light z-10 relative border-t-4 border-pizzaYellow">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col items-center text-gray-400">
+            <h2 class="font-script text-5xl text-white mb-4">Italy Pizza</h2>
+            
+            <p class="mb-2 font-medium text-gray-300 text-lg">387-A, Main Market, Near Mezan Bank, Model Town, Gujranwala.</p>
+            <p class="mb-8">Free Wi-Fi Zone Available inside.</p>
+            
+            <div class="inline-block border border-gray-700 rounded-lg px-6 py-3 mb-8 bg-gray-900/50">
+                <span class="block text-xs uppercase tracking-widest text-pizzaRed font-bold mb-1">Complain Number</span>
+                <span class="text-xl font-bold text-white tracking-widest">0321-6118080</span>
+            </div>
+
+            <p>&copy; 2026 Italy Pizza. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        gsap.registerPlugin(ScrollTrigger);
+
+        document.addEventListener("DOMContentLoaded", () => {
+            gsap.to(".gsap-hero", { y: 0, opacity: 1, duration: 1, stagger: 0.15, ease: "power3.out" });
+
+            gsap.from(".menu-item", {
+                scrollTrigger: { trigger: "#pizzas", start: "top 80%" },
+                y: 40, opacity: 0, duration: 0.8, stagger: 0.1, ease: "power2.out"
+            });
+            
+            gsap.from(".menu-deal", {
+                scrollTrigger: { trigger: "#b1g1-deals", start: "top 85%" },
+                y: 30, opacity: 0, duration: 0.6, stagger: 0.05, ease: "power2.out"
+            });
+
+            gsap.to(".float-wrapper", {
+                y: "-=15", duration: 2.5, repeat: -1, yoyo: true, ease: "sine.inOut"
+            });
+        });
+
+        // Interactive 3D Card Physics Engine (Adapted for VIP Card)
+        const card = document.getElementById('vip-card');
+        const glareFront = document.getElementById('glare-front');
+        const glareBack = document.getElementById('glare-back');
+        
+        let isDragging = false;
+        let startX = 0, startY = 0;
+        let targetRotX = 0, targetRotY = 0, lastTargetRotY = 0;
+        let currentRotX = 0, currentRotY = 0;
+
+        const LERP_FACTOR = 0.08; 
+        const DRAG_SENSITIVITY = 0.6;
+        
+        const startDrag = (e) => {
+            isDragging = true;
+            startX = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+            startY = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
+            lastTargetRotY = targetRotY;
+            document.body.style.cursor = 'grabbing';
+        };
+
+        const drag = (e) => {
+            if (!isDragging) return;
+            if(e.type.includes('touch')) e.preventDefault(); 
+            
+            const x = e.type.includes('mouse') ? e.pageX : e.touches[0].pageX;
+            const y = e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
+            
+            targetRotY = lastTargetRotY + ((x - startX) * DRAG_SENSITIVITY);
+            targetRotX = -((y - startY) * 0.1); 
+        };
+
+        const stopDrag = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            document.body.style.cursor = 'default';
+            targetRotY = Math.round(targetRotY / 180) * 180;
+            targetRotX = 0; 
+        };
+
+        const handleMouseMove = (e) => {
+            if (isDragging) return;
+            const rect = card.getBoundingClientRect();
+            const mouseX = e.clientX - (rect.left + rect.width / 2);
+            const mouseY = e.clientY - (rect.top + rect.height / 2);
+            
+            targetRotX = -(mouseY / rect.height) * 15; 
+            targetRotY = (Math.round(targetRotY / 180) * 180) + (mouseX / rect.width) * 15; 
+        };
+        
+        const handleMouseLeave = () => {
+            if (!isDragging) {
+                targetRotX = 0;
+                targetRotY = Math.round(targetRotY / 180) * 180;
+            }
+        };
+
+        card.addEventListener('mousedown', startDrag);
+        window.addEventListener('mousemove', drag, { passive: false });
+        window.addEventListener('mouseup', stopDrag);
+        card.addEventListener('mousemove', handleMouseMove);
+        card.addEventListener('mouseleave', handleMouseLeave);
+        card.addEventListener('touchstart', startDrag, { passive: true });
+        window.addEventListener('touchmove', drag, { passive: false });
+        window.addEventListener('touchend', stopDrag);
+
+        function updatePhysics() {
+            currentRotX += (targetRotX - currentRotX) * LERP_FACTOR;
+            currentRotY += (targetRotY - currentRotY) * LERP_FACTOR;
+
+            card.style.transform = `rotateX(${currentRotX}deg) rotateY(${currentRotY}deg)`;
+            
+            const glarePos = (currentRotY % 360) / 2; 
+            const glareTilt = currentRotX * 2;
+            glareFront.style.transform = `translateX(${glarePos + glareTilt}%)`;
+            glareBack.style.transform = `translateX(${-glarePos + glareTilt}%)`;
+
+            requestAnimationFrame(updatePhysics);
+        }
+        
+        updatePhysics();
+    </script>
+</body>
+</html>
